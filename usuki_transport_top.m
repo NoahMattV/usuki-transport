@@ -53,20 +53,25 @@ t = (hbar^2)/(2*m*a^2); % Hopping Energy [J]
 phi_l = zeros(Ny,1); % column of phi_l,1 to phi_l,Ny
 
 % Define H^(0) matrix (Ny-by-Ny)
-t_vector = zeros(Ny-1,1);
+t_vector = zeros(Ny,1);
 t_vector(:) = t;
+neg_t_vector = zeros(Ny-1,1);
+neg_t_vector(:) = -t;
 H_0 = diag(4*t+ V(:,1));
-H_0p1 = diag(t_vector,1);
-H_0n1 = diag(t_vector,-1);
+H_0p1 = diag(neg_t_vector,1);
+H_0n1 = diag(neg_t_vector,-1);
 H_0 = H_0 + H_0p1;
 H_0 = H_0 + H_0n1;
+
+H_0_0p1 = diag(t_vector);
+H_0_0n1 = diag(t_vector);
 
 C_1 = zeros(Ny,1);
 C_2 = zeros(Ny,1);
 
-T_11 = zeros(Ny,Nx); % 0
-T_12 = zeros(Ny,Nx); % I hat
-T_21 = zeros(Ny,Nx); % -I hat
+T_11 = zeros(Ny); % 0
+T_12 = eye(Ny); % I
+T_21 = zeros(Ny,Nx); % 
 T_22 = zeros(Ny,Nx); % H hat ^-1 l,l+1 (H hat l - E*I hat)
 
 P_2 = zeros(Ny,1);
