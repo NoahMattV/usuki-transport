@@ -1,0 +1,52 @@
+function out = qpcprofile(QW_Width, QW_Length, QPC_Width, QPC_Length)
+  global Nx;
+  global Ny;
+
+  a = 2E-9;
+
+  QW_W = QW_Width*1E-9;
+  QW_L = QW_Length*1E-9;
+  QPC_W = QPC_Width*1E-9;
+  QPC_L = QPC_Length*1E-9;
+  
+  Nx = ceil(QW_L/a); % Points along x
+  Ny = ceil(QW_W/a); % Points along y
+
+  h = 6.626E-34; % [J-s]
+  hbar = h/(2*pi); % Reduced planck's constant [J-s]
+  m0 = 9.11E-31; % [kg]
+  m = 0.067*m0; % [kg]
+
+  t = (hbar^2)/(2*m*a^2); % Hopping Energy [J]
+
+  V = zeros(Ny,Nx);
+
+  % hardwall potential on top and bottom of Nanowire
+  for i = 1:Nx
+    V(Ny,i) = t;
+    V(1,i) = t;
+  end
+
+  % QPC
+  QW_L_mid = ceil(Nx/2);
+  QW_W_mid = ceil(Ny/2);
+  QPC_L_mid = ceil(QPC_Length/2);
+  QPC_W_mid = ceil(QPC_Width/2);
+
+  QPC_L_start = QW_L_mid - QPC_L_mid;
+  QPC_L_end = QW_L_mid + QPC_L_mid;
+
+  QPC_W_start = QW_W_mid - QPC_W_mid;
+  QPC_W_end = QW_W_mid + QPC_W_mid;
+
+  for i = QPC_L_start:QPC_L_end;
+    V(:,i) = t;
+  end
+
+  for j = QPC_W_start:QPC_W_end;
+    V(j,:) = 0;
+  end
+
+  out = V;
+
+end
