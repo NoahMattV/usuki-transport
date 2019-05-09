@@ -192,36 +192,22 @@ Tmn = zeros(size(fp_modes)); % Transmission coefficient matrix (only forward pro
 mn_length = size(fp_modes,2);
 k = zeros(mn_length, mn_length);
 v = zeros(mn_length, mn_length);
-G = zeros(mn_length, mn_length);
-tmn = zeros(mn_length, mn_length);
-for i = 1:mn_length
-    for j = 1:mn_length
-        tmn(i,j) = C_1_Nx2(i,j); % transmission amplitude matrix with only forward prop modes
-    end
-end
 
 Tn = inv(T0_new);
-[T0_dummy, Dsort_dummy, fp_modes_out] = getEigsAndSortModes(Tn);
+
+[T0_new, Dsort, fp_modes_out] = getEigsAndSortModes(Tn);
 
 for m = 1:mn_length
     for n = 1:mn_length
         kn = log(fp_modes(n))/(1i*a);
-        km = log(fp_modes_out(m))/(1i*a);
-        vm = hbar*km/m;
-        vn = hbar*kn/m;
-        Tmn(m,n) = (vm/vn) * abs(tmn(m,n))^2;
+        
         
     end
 end
 k_m = log(fp_modes)/(1i*a);
 v_m = hbar*k_m/m;
 
-for m = 1:mn_length
-    for n = 1:mn_length
-        
-        G(m,n) = (2*e^2/h)*Tmn(m,n);
-    end
-end
+
 
 
 % -----------------

@@ -1,4 +1,4 @@
-function [Vsort,Dsort, fp_modes] = getEigsAndSortModes(T0)
+function [Vsort,Dsort] = getEigsAndSortModes(T0)
     global Ny;
     
     [V, D] = eig(T0);
@@ -45,28 +45,24 @@ for i = 1:2*Ny
 
 end
 
-zeroRows_fp = any(s_fp==0, 2);
+zeroRows_fp = all(s_fp==0, 2);
 s_fp(zeroRows_fp, :) = [];
-v_fp(zeroRows_fp, :) = [];
 
-zeroRows_fe = any(s_fe==0, 2);
+zeroRows_fe = all(s_fe==0, 2);
 s_fe(zeroRows_fe, :) = [];
-v_fe(zeroRows_fe, :) = [];
 
-zeroRows_bp = any(s_bp==0, 2);
+zeroRows_bp = all(s_bp==0, 2);
 s_bp(zeroRows_bp, :) = [];
-v_bp(zeroRows_bp, :) = [];
 
-zeroRows_be = any(s_be==0, 2);
+zeroRows_be = all(s_be==0, 2);
 s_be(zeroRows_be, :) = [];
-v_be(zeroRows_be, :) = [];
 
-%zeroRows_Vfp = any(v_fp==0, 2);
-%v_fp(zeroRows_Vfp, :) = [];
-%zeroRows_Vfe = any(v_fe==0, 2);
-%v_fe(zeroRows_Vfe, :) = [];
-%zeroRows_Vbp = any(v_bp==0, 2);
-%v_bp(zeroRows_Vbp, :) = [];
+zeroRows_Vfp = any(v_fp==0, 2);
+v_fp(zeroRows_Vfp, :) = [];
+zeroRows_Vfe = any(v_fe==0, 2);
+v_fe(zeroRows_Vfe, :) = [];
+zeroRows_Vbp = any(v_bp==0, 2);
+v_bp(zeroRows_Vbp, :) = [];
 %zeroRows_Vbe = any(v_be==0, 2);
 %v_be(zeroRows_Vbe, :) = [];
 
@@ -77,7 +73,6 @@ v_be(zeroRows_be, :) = [];
 Vsort = transpose([v_fp;v_fe;v_bp;v_be]);
 %Vsort = ([v_fp;v_fe;v_bp;v_be]);
 Dsort = [s_fp;s_fe;s_bp;s_be];
-fp_modes = s_fp;
 
 %out = diag(s);
 

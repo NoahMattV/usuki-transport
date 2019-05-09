@@ -17,7 +17,7 @@ function out = qpcprofile(QW_Width, QW_Length, QPC_Width, QPC_Length)
   m0 = 9.11E-31; % [kg]
   m = 0.067*m0; % [kg]
 
-  t = (hbar^2)/(2*m*a^2); % Hopping Energy [J]
+  t = 10000 * (hbar^2)/(2*m*a^2); % Hopping Energy * 10,000 [J]
 
   V = zeros(Ny,Nx);
 
