@@ -7,8 +7,8 @@
 % Problem 1: Quantum Point Contact
 % GaAs Nanowire
 clc;
-close all;
-format long;
+%close all;
+%format long;
 clear;
 global Nx;
 global Ny;
@@ -47,8 +47,9 @@ QPC_L = 50E-9; % QPC contact is 50 nm long
 
 %Ef = 50E-3*e; % Fermi energy [J] (part b)
 a = 2E-9; % spacing
-h = 6.626E-34; % [J-s]
-hbar = h/(2*pi); % Reduced planck's constant [J-s]
+%h = 6.626E-34; % [J-s]
+hbar = 1.054E-34; % Reduced planck's constant [J-s]
+h = hbar*2*pi;
 m0 = 9.11E-31; % [kg]
 m = 0.067*m0; % [kg]
 
@@ -62,30 +63,34 @@ t_vector = zeros(Ny,1);
 t_vector(:) = t;
 neg_t_vector = zeros(Ny-1,1);
 neg_t_vector(:) = -t;
-H_0 = diag(4*t + V(:,1)); % V(:,1) ? 
+H_0 = diag(V(:,1) + 4*t); % V(:,1) ?
 H_0p1 = diag(neg_t_vector,1);
 H_0n1 = diag(neg_t_vector,-1);
 H_0 = H_0 + H_0p1;
 H_0 = H_0 + H_0n1;
 
 H = zeros(Nx, Ny, Ny);
+P_2 = zeros(Nx+1, Ny, Ny);
+P_1 = zeros(Nx+1, Ny, Ny);
 
 for i = 1:Nx
     H(i,:,:) = diag(4*t + V(:,i)) + H_0p1 + H_0n1;
+    %H(i,:,:) = diag(4*t + V(i,:)) + H_0p1 + H_0n1;
     %H(i,:,:) = H(i,:,:) + H_0p1;
     %H(i,:,:) = H(i,:,:) + H_0n1;
 end
 
-H_0_0p1 = diag(t_vector);
 H_0_0n1 = diag(t_vector);
+H_0_0p1 = H_0_0n1';
 G = zeros(Ef_steps,1);
 
-for f = 10:Ef_steps
+f = 10;
+%for f = 10:Ef_steps
 
 T_11 = zeros(Ny); % 0
 T_12 = eye(Ny); % I
 T_21 = -H_0_0p1\H_0_0n1; % No B = -I
-T_22 = H_0_0p1\(Ef(f)*I - H_0); % for 0th slice
+T_22 = H_0_0p1\(H_0 - Ef(f)*I); % for 0th slice
 
 %T = zeros(Ef_steps, Nx, Ny, Ny);
 T22 = zeros(Nx, Ny, Ny);
@@ -107,59 +112,63 @@ T0 = [T_11 T_12 ; T_21 T_22];
 fprintf('Getting Eigs and Sorting Modes...');
 [T0_new, Dsort, fp_modes] = getEigsAndSortModes(T0); % mode-to-slice conversion (new T0)
 
-T11_new = T0_new(1:Ny, 1:Ny);
-T12_new = T0_new(1:Ny, Ny+1:2*Ny);
-T21_new = T0_new(Ny+1:2*Ny, 1:Ny);
-T22_new = T0_new(Ny+1:2*Ny, Ny+1:2*Ny);
+% T11_new = T0_new(1:Ny, 1:Ny);
+% T12_new = T0_new(1:Ny, Ny+1:2*Ny);
+% T21_new = T0_new(Ny+1:2*Ny, 1:Ny);
+% T22_new = T0_new(Ny+1:2*Ny, Ny+1:2*Ny);
+T11_new = T0_new(1:251, 1:251);
+T12_new = T0_new(1:251, 252:502);
+T21_new = T0_new(252:502, 1:251);
+T22_new = T0_new(252:502, 252:502);
 
-C_1_0 = eye(Ny);
-C_2_0 = zeros(Ny);
+C_1_0 = I;
+C_2_0 = Zero;
 
-%P_2_0_1 = T21_new * C_2_0;
-%P_2_0_2 = T22_new;
 P_2_0 = inv(T21_new * C_2_0 + T22_new);
 P_1_0 = -P_2_0 * T21_new * C_1_0;
 
-P_mat_0 = [I Zero ; P_1_0 P_2_0];
-C_mat_0 = [C_1_0 C_2_0 ; Zero I];
+%P_mat_0 = [I Zero ; P_1_0 P_2_0];
+%C_mat_0 = [C_1_0 C_2_0 ; Zero I];
 
-C_mat = zeros(Nx+2, 2*Ny, 2*Ny);
+%C_mat = zeros(Nx+2, 2*Ny, 2*Ny);
 
-C_mat(1,:,:) = T0_new * C_mat_0 * P_mat_0;
+%C_mat(1,:,:) = T0_new * C_mat_0 * P_mat_0;
+%C_mat_plus1 = T0_new * C_mat_0 * P_mat_0;
+C_mat_plus1 = T0_new*[C_1_0 C_2_0; Zero I]*[I Zero ; P_1_0 P_2_0];
 
-P_2 = zeros(Nx+2, Ny, Ny);
-P_1 = zeros(Nx+2, Ny, Ny);
-C_1 = zeros(Nx+2, Ny, Ny);
-C_2 = zeros(Nx+2, Ny, Ny);
+C_1 = C_mat_plus1(1:Ny,1:Ny);
+C_2 = C_mat_plus1(1:Ny, Ny+1:2*Ny);
 
 for i = 1:Nx  
-  C_mat_temp = reshape(C_mat(i,:,:),2*Ny,2*Ny);
-  %C_1(i,:,:) = C_mat_temp(1:Ny,1:Ny);
-  %C_2(i,:,:) = C_mat_temp(1:Ny, Ny+1:2*Ny);
-  C_1temp = C_mat_temp(1:Ny,1:Ny);
-  C_2temp = C_mat_temp(1:Ny, Ny+1:2*Ny);
+  C_mat_curr = C_mat_plus1;
   
   %Htemp = reshape(H(i,:,:),Ny,Ny);
   Htemp = diag(4*t + V(:,i)) + H_0p1 + H_0n1;
-  T22temp = H_0_0p1\(Ef(f)*I - Htemp); %Htemp - Ef(f)*I?
-  Ttemp = [Zero I ; T_21 T22temp]; 
+  T22temp = H_0_0p1\(Htemp - Ef(f)*I); %Htemp - Ef(f)*I?
+  T_mat = [Zero I ; T_21 T22temp]; 
 
-  P_2(i,:,:) = inv(T_21*C_2temp + T22temp);
+  P_2(i,:,:) = inv(T_21*C_2 + T22temp);
   P2temp = reshape(P_2(i,:,:),Ny,Ny);
-  P_1(i,:,:) = -P2temp*T_21*C_1temp;
+  
+  P_1(i,:,:) = -P2temp*T_21*C_1;
   P1temp = reshape(P_1(i,:,:),Ny,Ny);  
   P_mat = [I Zero ; P1temp P2temp];
   
-  C_mat(i+1,:,:) = Ttemp*C_mat_temp*P_mat;
+  C_mat_plus1 = T_mat*C_mat_curr*P_mat;
+  C_1 = C_mat_plus1(1:Ny,1:Ny);
+  C_2 = C_mat_plus1(1:Ny, Ny+1:2*Ny);
   
 end
 
 % Slice-to-Mode (Nx+1, Nx+2, collect info at Nx+2)
-C_mat_Nx1 = reshape(C_mat(Nx+1,:,:),2*Ny,2*Ny);
-C_1(Nx+1,:,:) = C_mat_Nx1(1:Ny,1:Ny);
-C_2(Nx+1,:,:) = C_mat_Nx1(1:Ny, Ny+1:2*Ny);
-C_1_Nx1 = reshape(C_1(Nx+1,:,:),Ny,Ny);
-C_2_Nx1 = reshape(C_2(Nx+1,:,:),Ny,Ny);
+%C_mat_Nx1 = reshape(C_mat(Nx+1,:,:),2*Ny,2*Ny);
+%C_1(Nx+1,:,:) = C_mat_Nx1(1:Ny,1:Ny);
+%C_2(Nx+1,:,:) = C_mat_Nx1(1:Ny, Ny+1:2*Ny);
+%C_1_Nx1 = reshape(C_1(Nx+1,:,:),Ny,Ny);
+%C_2_Nx1 = reshape(C_2(Nx+1,:,:),Ny,Ny);
+C_1_Nx1 = C_mat_plus1(1:Ny,1:Ny);
+C_2_Nx1 = C_mat_plus1(1:Ny, Ny+1:2*Ny);
+
 
 T12_Nx1 = inv(T21_new);
 T22_Nx1 = -T11_new*T12_Nx1;
@@ -214,7 +223,7 @@ end
 G(f,1) = (2*e^2/h)*TmnSum;
 clc;
 fprintf('%d/%d\n',f,Ef_steps);
-end %Ef loop
+%end %Ef loop
 
 
 % -----------------
