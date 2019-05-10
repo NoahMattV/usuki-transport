@@ -8,6 +8,7 @@
 % GaAs Nanowire
 clc;
 close all;
+format long;
 clear;
 global Nx;
 global Ny;
@@ -133,12 +134,13 @@ C_2 = zeros(Nx+2, Ny, Ny);
 
 for i = 1:Nx  
   C_mat_temp = reshape(C_mat(i,:,:),2*Ny,2*Ny);
-  C_1(i,:,:) = C_mat_temp(1:Ny,1:Ny);
-  C_2(i,:,:) = C_mat_temp(1:Ny, Ny+1:2*Ny);
+  %C_1(i,:,:) = C_mat_temp(1:Ny,1:Ny);
+  %C_2(i,:,:) = C_mat_temp(1:Ny, Ny+1:2*Ny);
   C_1temp = C_mat_temp(1:Ny,1:Ny);
   C_2temp = C_mat_temp(1:Ny, Ny+1:2*Ny);
   
-  Htemp = reshape(H(i,:,:),Ny,Ny);
+  %Htemp = reshape(H(i,:,:),Ny,Ny);
+  Htemp = diag(4*t + V(:,i)) + H_0p1 + H_0n1;
   T22temp = H_0_0p1\(Ef(f)*I - Htemp); %Htemp - Ef(f)*I?
   Ttemp = [Zero I ; T_21 T22temp]; 
 
