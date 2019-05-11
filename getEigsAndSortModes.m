@@ -60,6 +60,6 @@ v_be = Vector(:,double(s_be(2,:)));
 Vsort = [v_fp v_fe v_bp v_be];
 %Dsort = [s_fp(1,:);s_fe(1,:);s_bp(1,:);s_be(1,:)];
 Dsort = 0;
-fp_modes = s_fp;
+fp_modes = s_fp(1,:);
 
 end

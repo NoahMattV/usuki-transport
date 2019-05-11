@@ -1,4 +1,4 @@
-function out = qpcprofile(QW_Width, QW_Length, QPC_Width, QPC_Length, gf)
+function out = qpcprofile(QW_Width, QW_Length, QPC_Width, QPC_Length, gatefloor)
   global Nx;
   global Ny;
 
@@ -8,15 +8,15 @@ function out = qpcprofile(QW_Width, QW_Length, QPC_Width, QPC_Length, gf)
   QW_L = QW_Length*1E-9;
   QPC_W = QPC_Width*1E-9;
   QPC_L = QPC_Length*1E-9;
-  
+  gf = gatefloor*1E-9;
   Nx = ceil(QW_L/a); % Points along x
   Ny = ceil(QW_W/a); % Points along y
-  e = 1.602E-19;
+
   h = 6.626E-34; % [J-s]
   hbar = h/(2*pi); % Reduced planck's constant [J-s]
   m0 = 9.11E-31; % [kg]
   m = 0.067*m0; % [kg]
-  tgf = gf*e;
+
   t = 100000 * (hbar^2)/(2*m*a^2); % Hopping Energy * 10,000 [J]
 
   V = zeros(Ny,Nx);
@@ -39,7 +39,7 @@ function out = qpcprofile(QW_Width, QW_Length, QPC_Width, QPC_Length, gf)
   QPC_W_start = QW_W_mid - QPC_W_mid;
   QPC_W_end = QW_W_mid + QPC_W_mid;
 
-  for i = QPC_L_start:QPC_L_end
+  for i = QPC_L_start:QPC_L_end;
     V(:,i) = t;
   end
 
@@ -48,9 +48,7 @@ function out = qpcprofile(QW_Width, QW_Length, QPC_Width, QPC_Length, gf)
   end
 
   for i = QPC_L_start:QPC_L_end
-      for j = QPC_W_start:QPC_W_end
-        V(j,i) = tgf;
-      end
+    V(:,i) = t;
   end
   
   out = V;

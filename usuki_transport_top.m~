@@ -7,17 +7,20 @@
 % Problem 1: Quantum Point Contact
 % GaAs Nanowire
 clc;
-%close all;
+close all;
 %format long;
 clear;
 global Nx;
 global Ny;
 
-
-
+G = zeros(10);
+QPCW = linspace(10,100,10);
+for r = 1:10
 QW_width = 500; % y
 QW_length = 1000; % x
-QPC_width = 50; % along y
+% QPC_width = 50; % along y
+QPC_width = QPCW(r); % along y
+
 QPC_length = 50; % along x
 
 QW_w = QW_width*1E-9;
@@ -26,21 +29,21 @@ QPC_w = QPC_width*1E-9;
 QPC_l = QPC_length*1E-9;
 
 V = qpcprofile(QW_width,QW_length,QPC_width,QPC_length);
-
-%hold on;
-%surf(V);
-%axis tight
-%camlight
-%lighting phong
-%shading interp
-%xlabel('x (nm)');
-%ylabel('y (nm)');
-%zlabel('t (J)');
-%hold off;
+IT = eye(502,502);
+% hold on;
+% surf(V);
+% axis tight
+% camlight
+% lighting phong
+% shading interp
+% xlabel('x (nm)');
+% ylabel('y (nm)');
+% zlabel('t (J)');
+% hold off;
 
 e = 1.602E-19;
-Ef_steps = 10;
-Ef = linspace(0,(50E-3)*e,Ef_steps); % start at 1
+Ef_steps = 40;
+Ef = linspace((1E-3)*e,(50E-3)*e,Ef_steps); % start at 1
 W = 500E-9; % 500 nm wide
 L = 1000E-9; % 1000 nm long
 QPC_L = 50E-9; % QPC contact is 50 nm long
@@ -63,8 +66,7 @@ t_vector = zeros(Ny,1);
 t_vector(:) = t;
 neg_t_vector = zeros(Ny-1,1);
 neg_t_vector(:) = -t;
-%H_0 = diag(V(:,1) + 4*t); % V(:,1) ?
-H_0 = diag(V(1,:)
+H_0 = diag(V(:,1) + 4*t); % V(:,1) ?
 H_0p1 = diag(neg_t_vector,1);
 H_0n1 = diag(neg_t_vector,-1);
 H_0 = H_0 + H_0p1;
@@ -76,16 +78,17 @@ P_1 = zeros(Nx+1, Ny, Ny);
 
 for i = 1:Nx
     H(i,:,:) = diag(4*t + V(:,i)) + H_0p1 + H_0n1;
+    %H(i,:,:) = diag(4*t + V(i,:)) + H_0p1 + H_0n1;
     %H(i,:,:) = H(i,:,:) + H_0p1;
     %H(i,:,:) = H(i,:,:) + H_0n1;
 end
 
 H_0_0n1 = diag(t_vector);
 H_0_0p1 = H_0_0n1';
-G = zeros(Ef_steps,1);
+% G = zeros(Ef_steps); %part a
 
 f = 10;
-%for f = 10:Ef_steps
+%for f = Ef_steps:Ef_steps %1:Ef_steps for part a
 
 T_11 = zeros(Ny); % 0
 T_12 = eye(Ny); % I
@@ -136,95 +139,100 @@ P_1_0 = -P_2_0 * T21_new * C_1_0;
 %C_mat_plus1 = T0_new * C_mat_0 * P_mat_0;
 C_mat_plus1 = T0_new*[C_1_0 C_2_0; Zero I]*[I Zero ; P_1_0 P_2_0];
 
-C_1 = C_mat_plus1(1:Ny,1:Ny);
-C_2 = C_mat_plus1(1:Ny, Ny+1:2*Ny);
+C_1 = C_mat_plus1(1:251,1:251);
+C_2 = C_mat_plus1(1:251, 252:502);
 
-for i = 1:Nx  
+for i = 1:Nx
   C_mat_curr = C_mat_plus1;
   
-  %Htemp = reshape(H(i,:,:),Ny,Ny);
-  Htemp = diag(4*t + V(:,i)) + H_0p1 + H_0n1;
+  Htemp = reshape(H(i,:,:),Ny,Ny);
   T22temp = H_0_0p1\(Htemp - Ef(f)*I); %Htemp - Ef(f)*I?
   T_mat = [Zero I ; T_21 T22temp]; 
 
   P_2(i,:,:) = inv(T_21*C_2 + T22temp);
-  P2temp = reshape(P_2(i,:,:),Ny,Ny);
+  P2temp = inv(T_21*C_2 + T22temp);
   
   P_1(i,:,:) = -P2temp*T_21*C_1;
-  P1temp = reshape(P_1(i,:,:),Ny,Ny);  
+  P1temp = -P2temp*T_21*C_1;  
+  
   P_mat = [I Zero ; P1temp P2temp];
   
-  C_mat_plus1 = T_mat*C_mat_curr*P_mat;
-  C_1 = C_mat_plus1(1:Ny,1:Ny);
-  C_2 = C_mat_plus1(1:Ny, Ny+1:2*Ny);
+  C_mat_plus1 = T_mat*[C_1 C_2 ; Zero I]*P_mat;
+  C_1 = C_mat_plus1(1:251,1:251);
+  C_2 = C_mat_plus1(1:251, 252:502);
   
 end
 
 % Slice-to-Mode (Nx+1, Nx+2, collect info at Nx+2)
-%C_mat_Nx1 = reshape(C_mat(Nx+1,:,:),2*Ny,2*Ny);
+%C_mat_Nx1 = C_mat_plus1;
 %C_1(Nx+1,:,:) = C_mat_Nx1(1:Ny,1:Ny);
 %C_2(Nx+1,:,:) = C_mat_Nx1(1:Ny, Ny+1:2*Ny);
 %C_1_Nx1 = reshape(C_1(Nx+1,:,:),Ny,Ny);
 %C_2_Nx1 = reshape(C_2(Nx+1,:,:),Ny,Ny);
-C_1_Nx1 = C_mat_plus1(1:Ny,1:Ny);
-C_2_Nx1 = C_mat_plus1(1:Ny, Ny+1:2*Ny);
+%C_1_Nx1 = C_mat_plus1(1:Ny,1:Ny);
+%C_2_Nx1 = C_mat_plus1(1:Ny, Ny+1:2*Ny);
 
+T_Nx1 = IT/(T0_new);
+% T12_Nx1 = inv(T21_new);
+% T22_Nx1 = -T11_new*T12_Nx1;
+% %T_Nx1 = [Zero T12_Nx1 ; I T22_Nx1];
+% T11_Nx1 = T_Nx1(1:Ny, 1:Ny);
+% T21_Nx1 = T_Nx1(Ny+1:2*Ny, 1:Ny);
+T11_Nx1 = T_Nx1(1:251, 1:251);
+T12_Nx1 = T_Nx1(1:251, 252:502);
+T21_Nx1 = T_Nx1(252:502, 1:251);
+T22_Nx1 = T_Nx1(252:502, 252:502);
 
-T12_Nx1 = inv(T21_new);
-T22_Nx1 = -T11_new*T12_Nx1;
-T_Nx1 = [Zero T12_Nx1 ; I T22_Nx1];
-T11_Nx1 = T_Nx1(1:Ny, 1:Ny);
-T21_Nx1 = T_Nx1(Ny+1:2*Ny, 1:Ny);
-
-P_2_Nx1 = inv(T21_Nx1*C_2_Nx1 + T22_Nx1);
-P_1_Nx1 = -P_2_Nx1*T21_Nx1*C_1_Nx1;
+P_2_Nx1 = I/(T21_Nx1*C_2 + T22_Nx1);
+P_1_Nx1 = -P_2_Nx1*T21_Nx1*C_1;
 
 P_mat_Nx1 = [I Zero ; P_1_Nx1 P_2_Nx1]; 
 
-C_mat_Nx2 = T_Nx1*C_mat_Nx1*P_mat_Nx1;
+C_mat_Nx2 = T_Nx1*[C_1 C_2 ; Zero I]*P_mat_Nx1;
 
-C_mat_Nx2temp = reshape(C_mat(Nx+1,:,:),2*Ny,2*Ny);
-C_1(Nx+2,:,:) = C_mat_Nx2temp(1:Ny,1:Ny);
-C_1_Nx2 = reshape(C_1(Nx+2,:,:),Ny,Ny); % t, matrix of transmission amplitude
+C_1_Nx2 = C_mat_Nx2(1:Ny,1:Ny);
 
-Tmn = zeros(size(fp_modes,1)); % Transmission coefficient matrix (only forward propagating modes)
+%Tmn = zeros(size(fp_modes,1)); % Transmission coefficient matrix (only forward propagating modes)
 mn_length = size(fp_modes,1);
-k = zeros(mn_length, mn_length);
-v = zeros(mn_length, mn_length);
-G = zeros(mn_length, mn_length);
-tmn = zeros(mn_length, mn_length);
-for i = 1:mn_length
-    for j = 1:mn_length
-        tmn(i,j) = C_1_Nx2(i,j); % transmission amplitude matrix with only forward prop modes
-    end
-end
 
-Tn = inv(T0_new);
-[T0_dummy, Dsort_dummy, fp_modes_out] = getEigsAndSortModes(Tn);
+% for i = 1:mn_length
+%     for j = 1:mn_length
+%         tmn(i,j) = C_1_Nx2(i,j); % transmission amplitude matrix with only forward prop modes
+%     end
+% end
+
+%Tn = inv(T0_new);
+%[T0_dummy, Dsort_dummy, fp_modes_out] = getEigsAndSortModes(Tn);
 
 for m = 1:mn_length
     for n = 1:mn_length
-        kn = log(fp_modes(n))/(1i*a);
-        km = log(fp_modes_out(m))/(1i*a);
-        vm = hbar*km/m;
-        vn = hbar*kn/m;
-        Tmn(m,n) = (vm/vn) * abs(tmn(m,n))^2;
-        
+        %kn = log(fp_modes(n))/(1i*a);
+        %km = log(fp_modes_out(m))/(1i*a);
+%         kn = log(fp_modes(n));
+%         km = log(fp_modes(m));
+        km = atan(imag(fp_modes(m))/real(fp_modes(m)));
+        kn = atan(imag(fp_modes(n))/real(fp_modes(n)));
+
+        %vm = hbar*km/m;
+        %vn = hbar*kn/m;
+        Tmn = (km/kn) * abs(C_1_Nx2(m,n))^2;
+        %G(f) = G(f) + (2*e^2/h)*Tmn;
+        G(r) = G(r) + (2*e^2/h)*Tmn;
     end
 end
-
-TmnSum = 0;
-for m = 1:mn_length
-    for n = 1:mn_length
-        TmnSum = TmnSum + Tmn(m,n);
-    end
-end
-
-G(f,1) = (2*e^2/h)*TmnSum;
+% 
+% TmnSum = 0;
+% for m = 1:mn_length
+%     for n = 1:mn_length
+%         TmnSum = TmnSum + Tmn(m,n);
+%     end
+% end
+% 
+% G(f,1) = (2*e^2/h)*TmnSum;
 clc;
 fprintf('%d/%d\n',f,Ef_steps);
-%end %Ef loop
-
+end %Ef loop (QPCW loop for part b)
+plot(QPCW,G);
 
 % -----------------
 % Problem 1
